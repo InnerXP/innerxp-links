@@ -1,7 +1,7 @@
 # innerxp-links
 
-App/Universal Link association files for **app.innerxp.ai**. Netlify deploys this repository on
-push to `main`; the site serves nothing else.
+App/Universal Link association files for **app.innerxp.ai**, and the result page behind the link.
+Netlify deploys this repository on push to `main`; the site serves nothing else.
 
 The host exists so that a Firebase auth action link —
 `https://app.innerxp.ai/auth/action?mode=…&oobCode=…` — opens the InnerXP app instead of a
@@ -22,6 +22,12 @@ the usual reason Universal Links fail with no error anywhere.
 
 **No redirects on either path.** Android follows none when checking `assetlinks.json`.
 
+The same goes for `/auth/action`, which is why the page is `auth/action.html` and **not**
+`auth/action/index.html`: a directory would make Netlify answer the link's own URL with a `301` to
+the trailing-slash form. It works — the query string survives and both platforms match the
+association against the original URL — but it puts a redirect on the one path a mail link lands
+on, for nothing.
+
 ## Current state
 
 The identifiers listed are the **final** ones (`ai.innerxp.lumo` / `ai.innerxp.lumo.dev` under
@@ -34,7 +40,7 @@ keystore. Once the app is enrolled in Play App Signing, the *app signing* SHA-25
 Console → App integrity must be **added** here: an app distributed through Play presents Google's
 certificate, not ours, so that entry is listed alongside rather than replacing these.
 
-`/auth/action` is served by [`auth/action/index.html`](auth/action/index.html) — see below.
+`/auth/action` is served by [`auth/action.html`](auth/action.html) — see below.
 
 ## The result page — `/auth/action`
 

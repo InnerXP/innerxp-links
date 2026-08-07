@@ -34,8 +34,40 @@ keystore. Once the app is enrolled in Play App Signing, the *app signing* SHA-25
 Console → App integrity must be **added** here: an app distributed through Play presents Google's
 certificate, not ours, so that entry is listed alongside rather than replacing these.
 
-`/auth/action` itself is not served yet — a link tapped without the app installed currently gets
-a 404. The result page is tracked separately.
+`/auth/action` is served by [`auth/action/index.html`](auth/action/index.html) — see below.
+
+## The result page — `/auth/action`
+
+The web half of the auth action links, and only ever the **fallback**: on a device with the app
+installed and the association above live, the OS opens the app and this page never loads. It runs
+on a desktop, or on a phone without the app.
+
+One static file, no framework and no build step. It calls Google's Identity Toolkit REST API
+directly rather than loading the Firebase JS SDK — two endpoints are all it needs, and a static
+page keeps this repository free of anything that could shadow `/.well-known/*`.
+
+| `mode` | What it does |
+|---|---|
+| `verifyEmail` | `accounts:update` with the `oobCode`, then reports the outcome |
+| `resetPassword` | verifies the code **first**, then shows the password form, then `accounts:resetPassword` |
+| anything else, or a missing code | generic failure |
+
+Four outcomes, each in DE and EN: verified · link expired or already used · password set · generic
+failure. An invalid, expired and already-spent code are one outcome on purpose — Firebase tells
+them apart and the reader cannot, and all three mean the same thing: ask for a new link.
+
+**The reset code is verified before the form is drawn.** A dead link should say so rather than let
+someone choose and confirm a password and only then be told it was never going to work.
+
+**Language** comes from the `lang` parameter Firebase appends, falls back to the browser's, and can
+be switched by hand in the footer. The copy is taken verbatim from the app's own `.arb` files, so
+the page and screens 4.3 / 4.6 / 4.7 say the same thing in the same voice; the design tokens mirror
+`docs/DESIGN_SYSTEM.md`. Keep both in agreement — when the app's copy changes, this changes too.
+
+**The API key** normally comes from the `apiKey` parameter Firebase puts on the handler URL, so the
+page uses whichever project sent the mail and needs no key of its own. The hardcoded fallback
+exists only so the page can be opened by hand for testing, and points at the dev project — refresh
+or drop it once the apps are re-registered under `ai.innerxp.lumo*`.
 
 ## Checking it
 

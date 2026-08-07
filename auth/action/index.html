@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<title>InnerXP</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* Tokens mirror docs/DESIGN_SYSTEM.md in innerxp-mobile. Keep the two in agreement:
+   this page is the web half of screens 4.3 / 4.6 / 4.7 and must not drift from them. */
+:root{
+  --bg:#050505;
+  --surface:rgba(255,255,255,.05);
+  --border-subtle:rgba(255,255,255,.08);
+  --text-primary:rgba(255,255,255,.92);
+  --text-secondary:rgba(255,255,255,.55);
+  --text-muted:rgba(255,255,255,.30);
+  --sage:#55CF86;
+  --cyan:#00E0FF;
+  --rose:#712835;
+  --error-surface:rgba(220,40,40,.08);
+  --glow-cta:0 0 12px rgba(85,207,134,.5);
+  --glow-input:0 0 20px rgba(85,207,134,.25);
+  --glow-orb:0 0 24px rgba(0,224,255,.4);
+  --radius-pill:100px;
+  --radius-lg:16px;
+  --font-display:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --font-body:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100dvh;
+  background:var(--bg);
+  color:var(--text-primary);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:40px 24px;
+  gap:32px;
+}
+
+.brand{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:20px;
+  letter-spacing:-.4px;
+  color:var(--text-primary);
+}
+.brand span{color:var(--sage)}
+
+main{
+  width:100%;
+  max-width:360px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:24px;
+}
+
+/* ── the LUMO still: a ring the state tints ───────────────────────────── */
+.orb{
+  width:76px;height:76px;border-radius:var(--radius-pill);
+  display:grid;place-items:center;
+  border:2px solid var(--sage);
+  box-shadow:var(--glow-cta);
+  flex:none;
+}
+.orb svg{width:30px;height:30px;fill:none;stroke:var(--sage);stroke-width:2.5;
+  stroke-linecap:round;stroke-linejoin:round}
+.orb[data-tone="error"]{border-color:var(--rose);box-shadow:0 0 24px rgba(113,40,53,.55)}
+.orb[data-tone="error"] svg{stroke:var(--rose)}
+.orb[data-tone="neutral"]{border-color:var(--cyan);box-shadow:var(--glow-orb);
+  animation:pulse 1.6s ease-in-out infinite}
+.orb[data-tone="neutral"] svg{stroke:var(--cyan)}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.orb[data-tone="neutral"]{animation:none;opacity:.8}}
+
+h1{
+  font-family:var(--font-display);
+  font-weight:700;font-size:24px;line-height:33px;
+  margin:0;color:var(--text-primary);
+}
+.body{
+  font-size:14px;line-height:19px;
+  margin:0;color:var(--text-secondary);
+  text-wrap:pretty;
+}
+
+/* ── reset form ───────────────────────────────────────────────────────── */
+form{width:100%;display:flex;flex-direction:column;gap:16px;margin:0}
+.field{position:relative;display:flex;flex-direction:column;gap:6px;text-align:left}
+input[type="password"],input[type="text"]{
+  width:100%;min-height:50px;
+  padding:0 48px 0 20px;
+  background:var(--surface);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-pill);
+  color:var(--text-primary);
+  font-family:var(--font-body);font-size:12px;
+  outline:none;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+input::placeholder{color:var(--text-muted)}
+input:focus{border-color:var(--sage);box-shadow:var(--glow-input)}
+input[aria-invalid="true"]{border-color:var(--rose);background:var(--error-surface)}
+
+.reveal{
+  position:absolute;right:6px;top:0;height:50px;width:42px;
+  display:grid;place-items:center;
+  background:none;border:0;cursor:pointer;padding:0;
+  color:var(--text-muted);
+}
+.reveal:hover{color:var(--text-secondary)}
+.reveal svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+
+.field-error{
+  font-size:12px;line-height:16.5px;color:var(--rose);
+  padding-left:20px;margin:0;
+}
+.field-error:empty{display:none}
+
+button.cta{
+  width:100%;min-height:55px;
+  border:0;border-radius:var(--radius-pill);
+  background:var(--sage);color:#050505;
+  font-family:var(--font-display);font-weight:700;font-size:16px;
+  cursor:pointer;
+  box-shadow:var(--glow-cta);
+  transition:transform .1s ease,opacity .15s ease;
+}
+button.cta:active{transform:scale(.98)}
+button.cta:disabled{opacity:.5;cursor:default;box-shadow:0 0 24px rgba(85,207,134,.3)}
+
+/* ── footer / language ────────────────────────────────────────────────── */
+footer{
+  display:flex;gap:12px;align-items:center;
+  font-size:10px;line-height:15px;color:var(--text-muted);
+}
+footer button{
+  background:none;border:0;padding:0;cursor:pointer;
+  font-family:var(--font-display);font-size:10px;line-height:15px;
+  color:var(--text-muted);
+}
+footer button[aria-pressed="true"]{color:var(--cyan)}
+footer span{color:var(--border-subtle)}
+
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+</style>
+</head>
+<body>
+
+<div class="brand">Inner<span>XP</span></div>
+
+<main id="card" aria-live="polite" aria-atomic="true"></main>
+
+<footer>
+  <button type="button" data-lang="en" aria-pressed="false">EN</button>
+  <span aria-hidden="true">·</span>
+  <button type="button" data-lang="de" aria-pressed="false">DE</button>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  // Firebase hands the custom action handler `apiKey` and `lang` alongside `mode` and
+  // `oobCode`, so the page normally uses the key of whichever project sent the mail and
+  // needs none of its own. The fallback is the dev project's key, kept only so the page
+  // can be opened by hand for testing.
+  var FALLBACK_API_KEY = 'AIzaSyBicDGbOSAPfBpgcTZZDil3L1-WyN6AAqs';
+  var ENDPOINT = 'https://identitytoolkit.googleapis.com/v1/';
+  var MIN_PASSWORD = 8;
+
+  var COPY = {
+    en: {
+      loading:      { title: 'One moment',          body: 'Confirming your link.' },
+      verified:     { title: 'Email verified',      body: 'Sign in to continue.' },
+      expired:      { title: 'Link expired',        body: 'That link has expired or was already used. Open InnerXP and request a new one.' },
+      resetDone:    { title: 'Password updated',    body: 'Your orbit is secure. Sign in to continue.' },
+      failed:       { title: 'Something went wrong', body: "We couldn't complete that. Open InnerXP and try again." },
+      resetTitle:   'Set new password',
+      resetBody:    'Choose a password to secure your orbit.',
+      password:     'Password',
+      confirm:      'Confirm password',
+      cta:          'Set new password',
+      show:         'Show password',
+      hide:         'Hide password',
+      tooShort:     'Needs 8 characters or more, almost there.',
+      required:     'Password is required',
+      mismatch:     "Passwords don't match",
+      weak:         'Choose a stronger password.'
+    },
+    de: {
+      loading:      { title: 'Einen Moment',        body: 'Wir prüfen deinen Link.' },
+      verified:     { title: 'E-Mail bestätigt',    body: 'Melde dich an, um fortzufahren.' },
+      expired:      { title: 'Link abgelaufen',     body: 'Dieser Link ist abgelaufen oder wurde bereits verwendet. Öffne InnerXP und fordere einen neuen an.' },
+      resetDone:    { title: 'Passwort aktualisiert', body: 'Dein Orbit ist sicher. Melde dich an, um fortzufahren.' },
+      failed:       { title: 'Etwas ist schiefgelaufen', body: 'Wir konnten das nicht abschließen. Öffne InnerXP und versuche es erneut.' },
+      resetTitle:   'Neues Passwort festlegen',
+      resetBody:    'Wähle ein Passwort, um deinen Orbit zu sichern.',
+      password:     'Passwort',
+      confirm:      'Passwort bestätigen',
+      cta:          'Neues Passwort festlegen',
+      show:         'Passwort anzeigen',
+      hide:         'Passwort verbergen',
+      tooShort:     'Mindestens 8 Zeichen, fast geschafft.',
+      required:     'Passwort ist erforderlich',
+      mismatch:     'Passwörter stimmen nicht überein',
+      weak:         'Wähle ein stärkeres Passwort.'
+    }
+  };
+
+  var ICONS = {
+    check:   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 7"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>',
+    lock:    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>',
+    dots:    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/></svg>',
+    eye:     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a3 3 0 004.2 4.2"/><path d="M9.4 5.2A9.7 9.7 0 0112 5c6.4 0 10 6 10 6a17 17 0 01-3.2 3.9M6.2 6.7A17 17 0 002 11s3.6 6 10 6a9.6 9.6 0 003.3-.55"/></svg>'
+  };
+
+  var params  = new URLSearchParams(location.search);
+  var mode    = params.get('mode') || '';
+  var oobCode = params.get('oobCode') || '';
+  var apiKey  = params.get('apiKey') || FALLBACK_API_KEY;
+
+  var lang = pickLanguage();
+  var card = document.getElementById('card');
+  var lastRender = null;
+
+  function pickLanguage() {
+    var q = (params.get('lang') || '').slice(0, 2).toLowerCase();
+    if (COPY[q]) return q;
+    var nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    return COPY[nav] ? nav : 'en';
+  }
+
+  function t() { return COPY[lang]; }
+
+  function el(tag, attrs, html) {
+    var node = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) { node.setAttribute(k, attrs[k]); });
+    if (html != null) node.innerHTML = html;
+    return node;
+  }
+
+  function post(method, body) {
+    return fetch(ENDPOINT + method + '?key=' + encodeURIComponent(apiKey), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (json) {
+        if (!res.ok) {
+          var e = new Error((json.error && json.error.message) || 'UNKNOWN');
+          e.code = (json.error && json.error.message) || 'UNKNOWN';
+          throw e;
+        }
+        return json;
+      });
+    });
+  }
+
+  // A code that is invalid, expired or already spent is one user-facing outcome: the link
+  // no longer works and a new one is needed. Firebase distinguishes them; the user cannot.
+  function isDeadCode(code) {
+    return code === 'INVALID_OOB_CODE' || code === 'EXPIRED_OOB_CODE' || code === 'MISSING_OOB_CODE';
+  }
+
+  // ── renderers ──────────────────────────────────────────────────────────
+  function message(stateKey, tone, icon) {
+    lastRender = function () { message(stateKey, tone, icon); };
+    var copy = t()[stateKey];
+    card.replaceChildren(
+      el('div', { class: 'orb', 'data-tone': tone }, ICONS[icon]),
+      el('h1', null, copy.title),
+      el('p', { class: 'body' }, copy.body)
+    );
+    document.documentElement.lang = lang;
+    document.title = copy.title + ' · InnerXP';
+  }
+
+  function resetForm(error) {
+    lastRender = function () { resetForm(error); };
+    var c = t();
+    document.documentElement.lang = lang;
+    document.title = c.resetTitle + ' · InnerXP';
+
+    var form = el('form', { novalidate: 'novalidate' });
+    var fields = {};
+
+    [['pw', c.password, 'new-password'], ['confirm', c.confirm, 'new-password']].forEach(function (spec) {
+      var wrap  = el('div', { class: 'field' });
+      var input = el('input', {
+        type: 'password', id: spec[0], name: spec[0],
+        placeholder: spec[1], 'aria-label': spec[1],
+        autocomplete: spec[2], autocapitalize: 'off', spellcheck: 'false'
+      });
+      var toggle = el('button', { type: 'button', class: 'reveal', 'aria-label': c.show }, ICONS.eye);
+      toggle.addEventListener('click', function () {
+        var shown = input.type === 'text';
+        input.type = shown ? 'password' : 'text';
+        toggle.innerHTML = shown ? ICONS.eye : ICONS.eyeOff;
+        toggle.setAttribute('aria-label', shown ? c.show : c.hide);
+        input.focus();
+      });
+      wrap.append(input, toggle);
+      form.append(wrap);
+      fields[spec[0]] = input;
+    });
+
+    var err = el('p', { class: 'field-error', role: 'alert' }, error || '');
+    if (error) {
+      fields.pw.setAttribute('aria-invalid', 'true');
+      fields.confirm.setAttribute('aria-invalid', 'true');
+    }
+
+    var cta = el('button', { type: 'submit', class: 'cta' }, c.cta);
+    form.append(err, cta);
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var pw = fields.pw.value;
+      var confirm = fields.confirm.value;
+
+      if (!pw) return resetForm(c.required);
+      if (pw.length < MIN_PASSWORD) return resetForm(c.tooShort);
+      if (pw !== confirm) return resetForm(c.mismatch);
+
+      cta.disabled = true;
+      post('accounts:resetPassword', { oobCode: oobCode, newPassword: pw })
+        .then(function () { message('resetDone', 'success', 'check'); })
+        .catch(function (e) {
+          if (e.code === 'WEAK_PASSWORD') return resetForm(c.weak);
+          if (isDeadCode(e.code)) return message('expired', 'error', 'warning');
+          return message('failed', 'error', 'warning');
+        });
+    });
+
+    card.replaceChildren(
+      el('div', { class: 'orb', 'data-tone': 'success' }, ICONS.lock),
+      el('h1', null, c.resetTitle),
+      el('p', { class: 'body' }, c.resetBody),
+      form
+    );
+  }
+
+  // ── language switch ────────────────────────────────────────────────────
+  Array.prototype.forEach.call(document.querySelectorAll('footer button'), function (btn) {
+    btn.addEventListener('click', function () {
+      lang = btn.getAttribute('data-lang');
+      syncLangButtons();
+      if (lastRender) lastRender();
+    });
+  });
+
+  function syncLangButtons() {
+    Array.prototype.forEach.call(document.querySelectorAll('footer button'), function (btn) {
+      btn.setAttribute('aria-pressed', String(btn.getAttribute('data-lang') === lang));
+    });
+  }
+
+  // ── entry ──────────────────────────────────────────────────────────────
+  syncLangButtons();
+
+  if (!oobCode) {
+    message('failed', 'error', 'warning');
+  } else if (mode === 'verifyEmail') {
+    message('loading', 'neutral', 'dots');
+    post('accounts:update', { oobCode: oobCode })
+      .then(function () { message('verified', 'success', 'check'); })
+      .catch(function (e) {
+        message(isDeadCode(e.code) ? 'expired' : 'failed', 'error', 'warning');
+      });
+  } else if (mode === 'resetPassword') {
+    message('loading', 'neutral', 'dots');
+    // Verify before showing the form: a dead link should say so rather than let someone
+    // type a password twice and only then be told it was never going to work.
+    post('accounts:resetPassword', { oobCode: oobCode })
+      .then(function () { resetForm(null); })
+      .catch(function (e) {
+        message(isDeadCode(e.code) ? 'expired' : 'failed', 'error', 'warning');
+      });
+  } else {
+    message('failed', 'error', 'warning');
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ai.innerxp.lumo",
+      "sha256_cert_fingerprints": [
+        "94:C2:14:F7:16:20:4C:4A:C3:63:B7:DA:00:05:63:6B:DF:4D:8B:52:58:53:F1:99:E0:23:B4:58:E1:FB:4F:C6"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ai.innerxp.lumo.dev",
+      "sha256_cert_fingerprints": [
+        "26:C3:8C:7E:19:AC:B0:70:67:9C:C1:0A:7B:16:FB:DA:D9:CE:FD:23:0F:73:03:32:5A:9B:91:48:92:36:40:67",
+        "94:C2:14:F7:16:20:4C:4A:C3:63:B7:DA:00:05:63:6B:DF:4D:8B:52:58:53:F1:99:E0:23:B4:58:E1:FB:4F:C6"
+      ]
+    }
+  }
+]

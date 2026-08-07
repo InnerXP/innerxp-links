@@ -1,1 +1,18 @@
-{}
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "Y95T9S7BHF.ai.innerxp.lumo",
+          "Y95T9S7BHF.ai.innerxp.lumo.dev"
+        ],
+        "components": [
+          {
+            "/": "/auth/action*",
+            "comment": "Firebase auth action links (verification, password reset)"
+          }
+        ]
+      }
+    ]
+  }
+}

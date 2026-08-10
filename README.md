@@ -83,8 +83,8 @@ piece of this site that is not a static file.
 
 Android has no native Apple sheet. The app opens Apple's web OAuth flow in a Chrome Custom Tab and
 Apple **POSTs** the result (`response_mode=form_post`) to the Return URL on the Services ID
-`ai.innerxp.lumo.signin`. A form POST cannot re-enter an Android app, so this endpoint answers
-`307` to
+`ai.innerxp.lumo.signin.dev`. A form POST cannot re-enter an Android app, so this endpoint
+answers `307` to
 
 ```
 intent://callback?<the same body>#Intent;package=<applicationId>;scheme=signinwithapple;end
@@ -105,17 +105,28 @@ ever added to the app, or its sign-in returns `400`.
 **One string in three places, compared literally by Apple:** the Return URL on the Services ID,
 `APPLE_REDIRECT_URI` in the app's `env/*.json`, and `config.path` at the bottom of the function.
 
+**One Services ID per environment, sharing this one endpoint.** A Services ID is grouped under
+exactly one *primary App ID*, and Apple derives the user's `sub` from that grouping — so a prod
+build authorizing through a Services ID grouped under the **dev** App ID would give the same
+person a different `sub` on Android than on iOS. Dev is `ai.innerxp.lumo.signin.dev` under
+`ai.innerxp.lumo.dev`; `ai.innerxp.lumo.signin` is reserved for prod under `ai.innerxp.lumo`.
+Both register **this same Return URL**, which costs nothing here: the function routes on `state`,
+never on which Services ID the request came from.
+
 ### Before it can work
 
-1. **Register the domain and the Return URL** on Services ID `ai.innerxp.lumo.signin`
-   (Apple Developer → Identifiers → Services IDs → *Sign in with Apple* → Configure):
-   domain `app.innerxp.ai`, Return URL `https://app.innerxp.ai/auth/apple/callback`.
+1. **Register the domain and the Return URL** on the environment's Services ID — for dev,
+   `ai.innerxp.lumo.signin.dev` (Apple Developer → Identifiers → Services IDs → *Sign in with
+   Apple* → Configure): domain `app.innerxp.ai`, Return URL
+   `https://app.innerxp.ai/auth/apple/callback`. The Return URL field wants the **full https
+   URL**, not the Services ID — Apple rejects anything else with *"There is a problem with the
+   request entity"*.
 2. **Host Apple's domain-verification file.** Registering the domain hands over an
    `apple-developer-domain-association.txt` — commit it to `.well-known/` exactly as downloaded.
    It is unique to the team and domain and cannot be written by hand; the domain stays unverified
    without it, and an unverified domain's Return URL is rejected.
 3. ~~Add the Services ID to the API's `APPLE_OAUTH_AUDIENCES`.~~ **Done 2026-08-10** — the dev
-   API carries `ai.innerxp.lumo.dev,ai.innerxp.lumo.signin`. The web flow mints its token against
+   API carries `ai.innerxp.lumo.dev,ai.innerxp.lumo.signin.dev`. The web flow mints its token against
    the **Services ID**, not the bundle id, so `aud` differs by platform for the same user, and
    until this landed every Android sign-in would have failed the precheck with a perfectly valid
    token. `prod` needs the same when that project is stood up.

@@ -113,7 +113,9 @@ person a different `sub` on Android than on iOS. Dev is `ai.innerxp.lumo.signin.
 Both register **this same Return URL**, which costs nothing here: the function routes on `state`,
 never on which Services ID the request came from.
 
-### Before it can work
+### Setting it up per environment
+
+**Dev is done and green as of 2026-08-10** — an Android debug build of the `dev` flavor signed in with Apple end to end through this endpoint. The list below is what prod will need (BE-3), and the record of what dev took.
 
 1. **Register the domain and the Return URL** on the environment's Services ID — for dev,
    `ai.innerxp.lumo.signin.dev` (Apple Developer → Identifiers → Services IDs → *Sign in with
@@ -121,10 +123,16 @@ never on which Services ID the request came from.
    `https://app.innerxp.ai/auth/apple/callback`. The Return URL field wants the **full https
    URL**, not the Services ID — Apple rejects anything else with *"There is a problem with the
    request entity"*.
-2. **Host Apple's domain-verification file.** Registering the domain hands over an
-   `apple-developer-domain-association.txt` — commit it to `.well-known/` exactly as downloaded.
-   It is unique to the team and domain and cannot be written by hand; the domain stays unverified
-   without it, and an unverified domain's Return URL is rejected.
+2. ~~Host Apple's domain-verification file.~~ **Not needed — established by running it,
+   2026-08-10.** The sources disagree: Apple's own help says *"You don't need to upload a file on
+   your server to complete the registration process for domains and subdomains"*, while
+   third-party guides as recent as May 2026 present
+   `/.well-known/apple-developer-domain-association.txt` as mandatory for any web flow. With the
+   configuration saved, an Android debug build signed in end to end while that path answered
+   **404**. It is deliberately not hosted: a verification file nothing reads is a claim about the
+   setup that nothing checks. If a future domain, or a re-created Services ID, starts refusing the
+   redirect, that is when it earns its place — and note that re-creating a Services ID regenerates
+   the file's contents, so an old one would not have helped anyway.
 3. ~~Add the Services ID to the API's `APPLE_OAUTH_AUDIENCES`.~~ **Done 2026-08-10** — the dev
    API carries `ai.innerxp.lumo.dev,ai.innerxp.lumo.signin.dev`. The web flow mints its token against
    the **Services ID**, not the bundle id, so `aud` differs by platform for the same user, and

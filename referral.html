@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark">
+<title>InnerXP</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Hanken+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* Tokens mirror docs/DESIGN_SYSTEM.md in innerxp-mobile, as auth/action.html does.
+   No frame draws this page: it is the web fallback of a Resonance Link
+   (spec 3.8 Referral, KAN-84), shown only where the app is not installed. */
+:root{
+  --bg:#050505;
+  --surface:rgba(255,255,255,.05);
+  --border-subtle:rgba(255,255,255,.08);
+  --text-primary:rgba(255,255,255,.92);
+  --text-secondary:rgba(255,255,255,.55);
+  --text-muted:rgba(255,255,255,.30);
+  --sage:#55CF86;
+  --cyan:#00E0FF;
+  --glow-cta:0 0 12px rgba(85,207,134,.5);
+  --glow-orb:0 0 24px rgba(0,224,255,.4);
+  --radius-pill:100px;
+  --font-display:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --font-body:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100dvh;
+  background:var(--bg);
+  color:var(--text-primary);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:40px 24px;
+  gap:32px;
+}
+
+.brand{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:20px;
+  letter-spacing:-.4px;
+}
+.brand span{color:var(--sage)}
+
+main{
+  width:100%;
+  max-width:360px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:24px;
+}
+
+.orb{
+  width:76px;height:76px;border-radius:var(--radius-pill);
+  border:2px solid var(--cyan);
+  box-shadow:var(--glow-orb);
+  animation:pulse 1.6s ease-in-out infinite;
+  flex:none;
+}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.orb{animation:none;opacity:.8}}
+
+h1{
+  font-family:var(--font-display);
+  font-weight:700;font-size:24px;line-height:33px;
+  margin:0;
+}
+.body{
+  font-size:14px;line-height:19px;
+  margin:0;color:var(--text-secondary);
+  text-wrap:pretty;
+}
+
+.actions{width:100%;display:flex;flex-direction:column;gap:12px}
+.actions a{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;min-height:55px;
+  border-radius:var(--radius-pill);
+  font-family:var(--font-display);font-weight:700;font-size:16px;
+  text-decoration:none;
+  transition:transform .1s ease;
+}
+.actions a:active{transform:scale(.98)}
+.actions a[hidden]{display:none}
+.cta{background:var(--sage);color:#050505;box-shadow:var(--glow-cta)}
+.store{background:var(--surface);color:var(--text-primary);border:1px solid var(--border-subtle)}
+
+.hint{font-size:12px;line-height:16.5px;margin:0;color:var(--text-muted)}
+.hint[hidden]{display:none}
+
+footer{
+  display:flex;gap:12px;align-items:center;
+  font-size:10px;line-height:15px;color:var(--text-muted);
+}
+footer button{
+  background:none;border:0;padding:0;cursor:pointer;
+  font-family:var(--font-display);font-size:10px;line-height:15px;
+  color:var(--text-muted);
+}
+footer button[aria-pressed="true"]{color:var(--cyan)}
+footer span{color:var(--border-subtle)}
+</style>
+</head>
+<body>
+
+<div class="brand">Inner<span>XP</span></div>
+
+<main>
+  <div class="orb" aria-hidden="true"></div>
+  <h1 id="title"></h1>
+  <p class="body" id="body"></p>
+  <div class="actions">
+    <a class="cta" id="open" hidden></a>
+    <a class="store" id="play" hidden>Google Play</a>
+    <a class="store" id="appstore" hidden>App Store</a>
+  </div>
+  <p class="hint" id="hint" hidden></p>
+</main>
+
+<footer>
+  <button type="button" data-lang="en" aria-pressed="false">EN</button>
+  <span aria-hidden="true">·</span>
+  <button type="button" data-lang="de" aria-pressed="false">DE</button>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Configuration ──────────────────────────────────────────────────────────
+  //
+  // The host the invitation itself lives on — the one the app's App Link filter
+  // and the AASA claim (`/r/*`). The *Open* button points back at it.
+  var LINK_HOST = 'app.innerxp.ai';
+
+  // The Android app the Play button installs. The **dev** app for now: only the
+  // dev environment is being built, and a link minted by the dev backend must
+  // install the dev app for the install referrer to reach anything that can
+  // read it. Switch to `ai.innerxp.lumo` when prod is stood up.
+  var PLAY_PACKAGE = 'ai.innerxp.lumo.dev';
+
+  // The App Store listing. Empty until the app has a public one — the button
+  // stays hidden rather than pointing at nothing.
+  var APP_STORE_URL = '';
+
+  // The shape of a code the server mints (REFERRAL_FLOW_PLAN § 3). Anything
+  // else is not passed on to the store.
+  var CODE_PATTERN = /^[a-z0-9-]{3,40}$/;
+
+  // ── Copy ── dev copy: no frame draws this page.
+  var COPY = {
+    en: {
+      title: 'InnerXP',
+      body:  'This link opens in the InnerXP app. Install it to continue.',
+      open:  'Open InnerXP',
+      hint:  'Already installed? Open the app from here.'
+    },
+    de: {
+      title: 'InnerXP',
+      body:  'Dieser Link öffnet sich in der InnerXP-App. Installiere sie, um fortzufahren.',
+      open:  'InnerXP öffnen',
+      hint:  'Schon installiert? Öffne die App von hier aus.'
+    }
+  };
+
+  // ── The code ───────────────────────────────────────────────────────────────
+  //
+  // Read off the path, `/r/<code>`, and never rendered: the page says nothing
+  // about who sent the link. It travels on in two places only — the Play
+  // referrer and the *Open* link — both URL-encoded and set as attributes,
+  // never as markup.
+  var match = location.pathname.match(/^\/r\/([^/]+)\/?$/);
+  var raw = match ? safeDecode(match[1]).toLowerCase() : '';
+  var code = CODE_PATTERN.test(raw) ? raw : '';
+
+  function safeDecode(value) {
+    try { return decodeURIComponent(value); } catch (e) { return ''; }
+  }
+
+  // ── The buttons ────────────────────────────────────────────────────────────
+  var open = document.getElementById('open');
+  var play = document.getElementById('play');
+  var appstore = document.getElementById('appstore');
+  var hint = document.getElementById('hint');
+
+  // Play keeps `referrer` through the install, and the app reads it on its
+  // first launch (KAN-84 F6, `InstallReferrerService`).
+  var playUrl = 'https://play.google.com/store/apps/details?id=' + encodeURIComponent(PLAY_PACKAGE);
+  if (code) playUrl += '&referrer=' + encodeURIComponent('code=' + code);
+  play.href = playUrl;
+  play.hidden = false;
+
+  if (APP_STORE_URL) {
+    appstore.href = APP_STORE_URL;
+    appstore.hidden = false;
+  }
+
+  // *Open* is the iOS way back in after an install (F7): an ordinary universal
+  // link to the invitation. iOS will not open an app from a link to the page's
+  // **own** domain, so the button exists only where this page is served from
+  // another host — the landing subdomain — and never on LINK_HOST itself,
+  // where it would silently do nothing.
+  if (code && location.hostname !== LINK_HOST) {
+    open.href = 'https://' + LINK_HOST + '/r/' + encodeURIComponent(code);
+    open.hidden = false;
+    hint.hidden = false;
+  }
+
+  // ── Language ───────────────────────────────────────────────────────────────
+  var lang = pickLanguage();
+
+  function pickLanguage() {
+    var nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    return COPY[nav] ? nav : 'en';
+  }
+
+  function render() {
+    var t = COPY[lang];
+    document.documentElement.lang = lang;
+    document.getElementById('title').textContent = t.title;
+    document.getElementById('body').textContent = t.body;
+    open.textContent = t.open;
+    hint.textContent = t.hint;
+    Array.prototype.forEach.call(document.querySelectorAll('footer button'), function (btn) {
+      btn.setAttribute('aria-pressed', String(btn.getAttribute('data-lang') === lang));
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('footer button'), function (btn) {
+    btn.addEventListener('click', function () {
+      lang = btn.getAttribute('data-lang');
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

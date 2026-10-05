@@ -1,7 +1,7 @@
 # innerxp-links
 
-App/Universal Link association files for **app.innerxp.ai**, the result page behind the link, and
-the Sign in with Apple return hop Android needs. Netlify deploys this repository on push to
+App/Universal Link association files for **app.innerxp.ai**, the result page behind the auth
+links, the Resonance Link's fallback page, and the Sign in with Apple return hop Android needs. Netlify deploys this repository on push to
 `main`; the site serves nothing else.
 
 The host exists so that a Firebase auth action link —
@@ -76,6 +76,44 @@ page uses whichever project sent the mail and needs no key of its own. The hardc
 exists only so the page can be opened by hand for testing, and points at the dev project — refresh
 or drop it once the apps are re-registered under `ai.innerxp.lumo*`.
 
+## The Resonance Link — `/r/<code>`
+
+An invitation (spec 3.8 *Referral*, KAN-84): `https://app.innerxp.ai/r/<code>`. Where the app is
+installed the OS opens it and this page never loads — the AASA claims `/r/*` and the Android app's
+manifest claims `pathPrefix="/r/"`. Everywhere else, [`netlify.toml`](netlify.toml) rewrites the
+path to [`referral.html`](referral.html) with a **200**, so the browser keeps `/r/<code>` and the
+page reads the code off its own path. The full plan is
+[`docs/REFERRAL_FLOW_PLAN.md`](https://github.com/Olearis-InnerXP/innerxp-mobile/blob/develop/docs/REFERRAL_FLOW_PLAN.md)
+in the mobile repo.
+
+**The AASA entry must not go live before the app handles `/r/`.** An installed build without the
+`/r/:code` route opens a tapped link on "Page Not Found". The route landed in the mobile repo on
+2026-10-05 (F3); deploy `/r/*` only once testers run a build that has it.
+
+What the page does with the code, and nothing else:
+
+- **The Play button carries it** as the store's referrer —
+  `…/details?id=<package>&referrer=code%3D<code>` — and the app reads it on its first launch
+  through Google's Install Referrer API (F6).
+- **The *Open* button carries it back to the app** after an iOS install (F7). It is drawn **only
+  on a host other than `app.innerxp.ai`**: iOS will not open an app from a link to the domain the
+  reader is already on, so on this host the button would do nothing.
+- **It is never rendered.** The page says nothing about who sent the link, and the code goes only
+  into the two URLs above, encoded and set as attributes.
+
+Three things are deliberately unfinished:
+
+1. **The landing subdomain does not exist yet** (`get.innerxp.ai` or similar — the plan's Q7). It
+   needs one DNS record from whoever holds the `innerxp.ai` zone, then a domain alias on this
+   Netlify site, then `/r/*` on `app.innerxp.ai` answering a **302** to it. Until then the iOS
+   re-tap cannot work, and iOS visitors see the page without an *Open* button.
+2. **`PLAY_PACKAGE` is the dev app** (`ai.innerxp.lumo.dev`), because only dev is being built.
+   Switch it to `ai.innerxp.lumo` when prod is stood up.
+3. **`APP_STORE_URL` is empty**, so the App Store button is hidden — there is no public listing.
+   The official store badges and Apple's Smart App Banner
+   (`<meta name="apple-itunes-app" content="app-id=…, app-argument=https://app.innerxp.ai/r/<code>">`)
+   come with the listings. The copy is dev copy: no frame draws this page.
+
 ## Sign in with Apple on Android — `/auth/apple/callback`
 
 Served by [`netlify/functions/apple-callback.mjs`](netlify/functions/apple-callback.mjs), the one
@@ -143,7 +181,8 @@ never on which Services ID the request came from.
 
 ```bash
 curl -sI https://app.innerxp.ai/.well-known/assetlinks.json               # 200, application/json, no redirect
-curl -sI https://app.innerxp.ai/.well-known/apple-app-site-association    # same
+curl -sI https://app.innerxp.ai/.well-known/apple-app-site-association    # same, and lists /r/*
+curl -s -o /dev/null -w '%{http_code}\n' https://app.innerxp.ai/r/aurora-42   # 200, the fallback page
 
 # The Apple callback: a valid state redirects, an unknown one refuses
 curl -si -X POST https://app.innerxp.ai/auth/apple/callback \

@@ -10,6 +10,10 @@
           {
             "/": "/auth/action*",
             "comment": "Firebase auth action links (verification, password reset)"
+          },
+          {
+            "/": "/r/*",
+            "comment": "Resonance Link invitations (spec 3.8 Referral, KAN-84)"
           }
         ]
       }

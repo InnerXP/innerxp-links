@@ -197,4 +197,4 @@ open 'https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.sit
 Apple's CDN caches the AASA aggressively; deleting and reinstalling the app is the way to force a
 fresh fetch.
 
-Deploy released by InnerXP, 2026-10-07.
+Deploy released by InnerXP, 2026-10-07 (repo public)

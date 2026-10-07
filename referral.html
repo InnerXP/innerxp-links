@@ -52,6 +52,7 @@ body{
   font-weight:700;
   font-size:20px;
   letter-spacing:-.4px;
+  margin:0;
 }
 .brand span{color:var(--sage)}
 
@@ -65,12 +66,6 @@ main{
   gap:24px;
 }
 
-
-h1{
-  font-family:var(--font-display);
-  font-weight:700;font-size:24px;line-height:33px;
-  margin:0;
-}
 .body{
   font-size:14px;line-height:19px;
   margin:0;color:var(--text-secondary);
@@ -109,10 +104,9 @@ footer span{color:var(--border-subtle)}
 </head>
 <body>
 
-<div class="brand">Inner<span>XP</span></div>
+<h1 class="brand">Inner<span>XP</span></h1>
 
 <main>
-  <h1 id="title"></h1>
   <p class="body" id="body"></p>
   <div class="actions">
     <a class="cta" id="open" hidden></a>
@@ -155,13 +149,11 @@ footer span{color:var(--border-subtle)}
   // ── Copy ── dev copy: no frame draws this page.
   var COPY = {
     en: {
-      title: 'InnerXP',
       body:  'This link opens in the InnerXP app. Install it to continue.',
       open:  'Open InnerXP',
       hint:  'Already installed? Open the app from here.'
     },
     de: {
-      title: 'InnerXP',
       body:  'Dieser Link öffnet sich in der InnerXP-App. Installiere sie, um fortzufahren.',
       open:  'InnerXP öffnen',
       hint:  'Schon installiert? Öffne die App von hier aus.'
@@ -222,7 +214,6 @@ footer span{color:var(--border-subtle)}
   function render() {
     var t = COPY[lang];
     document.documentElement.lang = lang;
-    document.getElementById('title').textContent = t.title;
     document.getElementById('body').textContent = t.body;
     open.textContent = t.open;
     hint.textContent = t.hint;

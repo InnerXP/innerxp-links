@@ -9,13 +9,21 @@
     Content-Type = "application/json"
 
 # A Resonance Link, `/r/<code>` (spec 3.8 Referral, KAN-84) — the page a link
-# shows where the app is not installed. A 200 rewrite, not a redirect: the
-# browser keeps `/r/<code>` and the page reads the code off its own path.
+# shows where the app is not installed.
 #
-# Once the landing subdomain exists (REFERRAL_FLOW_PLAN § 4.4, Q7), this host
-# answers `/r/*` with a 302 to it instead, and the same page served there grows
-# an *Open* button — iOS will not open the app from a link to this host while
-# the reader is on it.
+# On the invitation's own host it moves to the landing subdomain first
+# (REFERRAL_FLOW_PLAN § 4.4, Q7): iOS will not open the app from a link to the
+# host the reader is already on, so the page's *Open* button has to be drawn
+# somewhere else. An installed app never sees this — iOS and Android take the
+# link before any request is made. A 302, not a 301, so no browser remembers it.
+# It must stay above the rewrite: Netlify applies the first rule that matches.
+[[redirects]]
+  from = "https://app.innerxp.ai/r/*"
+  to = "https://get.innerxp.ai/r/:splat"
+  status = 302
+
+# On the landing subdomain, a 200 rewrite rather than a redirect: the browser
+# keeps `/r/<code>` and the page reads the code off its own path.
 [[redirects]]
   from = "/r/*"
   to = "/referral.html"

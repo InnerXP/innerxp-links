@@ -80,15 +80,20 @@ or drop it once the apps are re-registered under `ai.innerxp.lumo*`.
 
 An invitation (spec 3.8 *Referral*, KAN-84): `https://app.innerxp.ai/r/<code>`. Where the app is
 installed the OS opens it and this page never loads — the AASA claims `/r/*` and the Android app's
-manifest claims `pathPrefix="/r/"`. Everywhere else, [`netlify.toml`](netlify.toml) rewrites the
-path to [`referral.html`](referral.html) with a **200**, so the browser keeps `/r/<code>` and the
-page reads the code off its own path. The full plan is
+manifest claims `pathPrefix="/r/"`. Everywhere else, [`netlify.toml`](netlify.toml) answers
+`app.innerxp.ai/r/<code>` with a **302** to `get.innerxp.ai/r/<code>`, the landing subdomain, and
+there rewrites the path to [`referral.html`](referral.html) with a **200**, so the browser keeps
+`/r/<code>` and the page reads the code off its own path. `get.innerxp.ai` is a domain alias of
+this Netlify site — a `CNAME` to `innerxp-links.netlify.app` in the `innerxp.ai` zone — and has
+served since 2026-10-07. The full plan is
 [`docs/REFERRAL_FLOW_PLAN.md`](https://github.com/Olearis-InnerXP/innerxp-mobile/blob/develop/docs/REFERRAL_FLOW_PLAN.md)
 in the mobile repo.
 
-**The AASA entry must not go live before the app handles `/r/`.** An installed build without the
-`/r/:code` route opens a tapped link on "Page Not Found". The route landed in the mobile repo on
-2026-10-05 (F3); deploy `/r/*` only once testers run a build that has it.
+**The AASA entry is live since 2026-10-07, so the app must handle `/r/`.** An installed build
+without the `/r/:code` route opens a tapped link on "Page Not Found". The route landed in the
+mobile repo on 2026-10-05 (F3); a tester on a build older than that should update. Apple's CDN
+picks the entry up on its own schedule, so for a while an installed app may still leave the link
+in Safari.
 
 What the page does with the code, and nothing else:
 
@@ -97,19 +102,18 @@ What the page does with the code, and nothing else:
   through Google's Install Referrer API (F6).
 - **The *Open* button carries it back to the app** after an iOS install (F7). It is drawn **only
   on a host other than `app.innerxp.ai`**: iOS will not open an app from a link to the domain the
-  reader is already on, so on this host the button would do nothing.
+  reader is already on, so on this host the button would do nothing. That is the whole reason for
+  the 302 — it puts the reader on `get.innerxp.ai`, where the button points back at
+  `app.innerxp.ai/r/<code>` and is a real universal link.
 - **It is never rendered.** The page says nothing about who sent the link, and the code goes only
   into the two URLs above, encoded and set as attributes.
 
-Three things are deliberately unfinished:
+Two things are deliberately unfinished:
 
-1. **The landing subdomain does not exist yet** (`get.innerxp.ai` or similar — the plan's Q7). It
-   needs one DNS record from whoever holds the `innerxp.ai` zone, then a domain alias on this
-   Netlify site, then `/r/*` on `app.innerxp.ai` answering a **302** to it. Until then the iOS
-   re-tap cannot work, and iOS visitors see the page without an *Open* button.
-2. **`PLAY_PACKAGE` is the dev app** (`ai.innerxp.lumo.dev`), because only dev is being built.
-   Switch it to `ai.innerxp.lumo` when prod is stood up.
-3. **`APP_STORE_URL` is empty**, so the App Store button is hidden — there is no public listing.
+1. **`PLAY_PACKAGE` is the dev app** (`ai.innerxp.lumo.dev`), because only dev is being built.
+   Switch it to `ai.innerxp.lumo` when prod is stood up. The listing is not public, so the button
+   installs for signed-in testers only and answers *not found* to everyone else.
+2. **`APP_STORE_URL` is empty**, so the App Store button is hidden — there is no public listing.
    The official store badges and Apple's Smart App Banner
    (`<meta name="apple-itunes-app" content="app-id=…, app-argument=https://app.innerxp.ai/r/<code>">`)
    come with the listings. The copy is dev copy: no frame draws this page.
@@ -182,7 +186,8 @@ never on which Services ID the request came from.
 ```bash
 curl -sI https://app.innerxp.ai/.well-known/assetlinks.json               # 200, application/json, no redirect
 curl -sI https://app.innerxp.ai/.well-known/apple-app-site-association    # same, and lists /r/*
-curl -s -o /dev/null -w '%{http_code}\n' https://app.innerxp.ai/r/aurora-42   # 200, the fallback page
+curl -sI https://app.innerxp.ai/r/aurora-42 | grep -iE '^(HTTP|location)'  # 302 → https://get.innerxp.ai/r/aurora-42
+curl -s -o /dev/null -w '%{http_code}\n' https://get.innerxp.ai/r/aurora-42   # 200, the fallback page
 
 # The Apple callback: a valid state redirects, an unknown one refuses
 curl -si -X POST https://app.innerxp.ai/auth/apple/callback \

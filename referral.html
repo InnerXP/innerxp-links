@@ -26,7 +26,6 @@
   --sage:#55CF86;
   --cyan:#00E0FF;
   --glow-cta:0 0 12px rgba(85,207,134,.5);
-  --glow-orb:0 0 24px rgba(0,224,255,.4);
   --radius-pill:100px;
   --font-display:'Space Grotesk',system-ui,-apple-system,sans-serif;
   --font-body:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
@@ -66,15 +65,6 @@ main{
   gap:24px;
 }
 
-.orb{
-  width:76px;height:76px;border-radius:var(--radius-pill);
-  border:2px solid var(--cyan);
-  box-shadow:var(--glow-orb);
-  animation:pulse 1.6s ease-in-out infinite;
-  flex:none;
-}
-@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
-@media (prefers-reduced-motion:reduce){.orb{animation:none;opacity:.8}}
 
 h1{
   font-family:var(--font-display);
@@ -122,7 +112,6 @@ footer span{color:var(--border-subtle)}
 <div class="brand">Inner<span>XP</span></div>
 
 <main>
-  <div class="orb" aria-hidden="true"></div>
   <h1 id="title"></h1>
   <p class="body" id="body"></p>
   <div class="actions">
